@@ -106,6 +106,7 @@ def main():
 
     # Find first available port
     if not args.debug:
+        ports = []
         print('Finding port number in {0}...'.format(check_port_path))
         for file_name in os.listdir(check_port_path):
             print('in {0}'.format(file_name))
@@ -117,11 +118,11 @@ def main():
                             m = re.search('(?<=proxy_pass http://127.0.0.1:)\d+', line)
                             if m is not None:
                                 port = int(m.group(0))
-                                if port > start_port:
-                                    start_port = port
+                                ports.append(port)
                     except UnicodeDecodeError:
                         continue
-    start_port += 1
+        while start_port not in ports:
+            start_port += 1
     print('PORT: {port}'.format(port=start_port))
 
     # store port number in file .port
@@ -161,7 +162,7 @@ def main():
         # Restart servers
         print('Restarting services...')
         subprocess.check_call('sudo supervisorctl reload', shell=True)
-        subprocess.check_call('sudo service nginx restart', shell=True)
+        subprocess.check_call('sudo service nginx reload', shell=True)
 
 
 if __name__ == '__main__':
