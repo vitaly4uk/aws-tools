@@ -54,14 +54,13 @@ if not os.path.exists('logs'):
     print('Creating logs directory...')
     os.mkdir('logs')
 
-if args.sql and os.path.exists('/home/ubuntu/mysql_pass'):
+if os.path.exists('/home/ubuntu/mysql_pass'):
     print('Creating MySQL database...')
     mysql_user, mysql_pass = open('/home/ubuntu/mysql_pass').read().strip().split(':')
     sql_name = args.domain.encode('idna').replace('.', '_').replace('-', '_')
     if len(sql_name) > 16:
         sql_name = sql_name[:12] + ''.join(random.choice(string.ascii_uppercase + string.digits) for i in range(4))
     kwargs = {
-        'sql_file': args.sql,
         'sql_name': sql_name,
         'mysql_user': mysql_user,
         'mysql_pass': mysql_pass,
@@ -71,7 +70,11 @@ if args.sql and os.path.exists('/home/ubuntu/mysql_pass'):
 
     subprocess.check_call('echo "{create_db_sql}" | mysql -uroot -p{mysql_pass}'.format(**kwargs), shell=True)
     subprocess.check_call('echo "{create_user_sql}" | mysql -uroot -p{mysql_pass}'.format(**kwargs), shell=True)
-    subprocess.check_call('mysql -uroot -p{mysql_pass} {sql_name} < {sql_file}'.format(**kwargs), shell=True)
+    if args.sql:
+        kwargs.update({
+            'sql_file': args.sql,
+        })
+        subprocess.check_call('mysql -uroot -p{mysql_pass} {sql_name} < {sql_file}'.format(**kwargs), shell=True)
 
     print('MySQL user password and database are {sql_name}'.format(sql_name=sql_name))
 
