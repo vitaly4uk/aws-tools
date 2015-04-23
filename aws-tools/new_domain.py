@@ -122,7 +122,7 @@ def main():
                     except UnicodeDecodeError:
                         continue
         print(ports)
-        while start_port not in ports:
+        while start_port in ports:
             start_port += 1
     print('PORT: {port}'.format(port=start_port))
 
