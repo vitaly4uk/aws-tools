@@ -2,8 +2,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function, unicode_literals
 import jinja2
+import string
 import io
 import os
+import random
 import re
 import argparse
 import subprocess
@@ -56,12 +58,14 @@ if args.sql and os.path.exists('/home/ubuntu/mysql_pass'):
     print('Creating MySQL database...')
     mysql_user, mysql_pass = open('/home/ubuntu/mysql_pass').read().strip().split(':')
     sql_name = args.domain.encode('idna').replace('.', '_').replace('-', '_')
+    if len(sql_name) > 16:
+        sql_name = sql_name[:12] + ''.join(random.choice(string.ascii_uppercase + string.digits) for i in range(4))
     kwargs = {
         'sql_file': args.sql,
         'sql_name': sql_name,
         'mysql_user': mysql_user,
         'mysql_pass': mysql_pass,
-        'create_db_sql': "CREATE DATABASE {sql_name};".format(sql_name=sql_name),
+        'create_db_sql': "CREATE DATABASE {sql_name} CHARACTER SET utf8 COLLATE utf8_general_ci;".format(sql_name=sql_name),
         'create_user_sql': "GRANT ALL PRIVILEGES ON {sql_name}.* To '{sql_name}'@'localhost' IDENTIFIED BY '{sql_name}';".format(sql_name=sql_name),
     }
 
