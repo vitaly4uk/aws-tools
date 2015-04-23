@@ -1,0 +1,16 @@
+DEBUG = False
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': '{{ sql_name }}',
+        'USER': '{{ sql_name }}',  # Not used with sqlite3.
+        'PASSWORD': '{{ sql_name }}',  # Not used with sqlite3.
+        'HOST': '',  # Set to empty string for localhost. Not used with sqlite3.
+        'PORT': '',  # Set to empty string for default. Not used with sqlite3.
+        'TEST_CHARSET': 'utf-8',
+        'TEST_COLLATION': 'utf8_general_ci',
+    }
+}
+
+ALLOWED_HOSTS = ['{{ domain }}', 'www.{{ domain }}', '127.0.0.1']
