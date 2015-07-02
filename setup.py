@@ -1,11 +1,12 @@
 from distutils.core import setup
+from aws_tools import VERSION
 
 setup(
     name='aws-tools',
-    version='0.1',
+    version='.'.join(VERSION),
     packages=['aws-tools'],
     url='http://github.com/vitaly4uk/aws-tools',
-    license=open('LICENSE').read(),
+    license='GPL v3',
     author='vitaly omelchuk',
     author_email='vitaly.omelchuk@gmail.com',
     description='tools to create projects on vps',

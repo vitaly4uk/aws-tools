@@ -10,6 +10,7 @@ import re
 import argparse
 import subprocess
 import sys
+from aws_tools import VERSION
 
 
 def prompt_sudo():
@@ -23,7 +24,7 @@ def prompt_sudo():
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Create config files and start new project. Should be started in project direcrory.')
+        description='Create config files and start new project. Should be started in project directory.')
     parser.add_argument('domain', help='Domain name. Example: example.com')
     parser.add_argument('--sql', help='SQL file name with DB. Example: example_com.sql')
     parser.add_argument('--python', help='python interpreter path', default='/usr/bin/python')
@@ -31,7 +32,7 @@ def main():
                         action='store_true')
     parser.add_argument('--drop-db', help='Drop database if exist.', action='store_true', dest='drop_db')
     parser.add_argument('-r', '--recreate-settings', help='Recreate local_settings file if exist', dest='recreate', action='store_true')
-    parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.3')
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + '.'.join(VERSION))
     args = parser.parse_args()
 
     if not prompt_sudo() == 0:
