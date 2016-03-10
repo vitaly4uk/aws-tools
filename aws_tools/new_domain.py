@@ -18,7 +18,6 @@ def find_wsgi_file(path):
         if 'wsgi.py' in file_names:
             return root
         for new_path in [dir_name for dir_name in dir_names if dir_name[0] != '.' and dir_name != 'venv']:
-            print("'", new_path, "'")
             wsgi_path = find_wsgi_file(os.path.join(root, new_path))
             if wsgi_path:
                 return wsgi_path
@@ -177,10 +176,8 @@ def main():
     template_env = jinja2.Environment(loader=template_loader)
     template = template_env.get_or_select_template(['template', 'template_nginx'])
 
-    wsgi_root = find_wsgi_file('.')
-    if wsgi_root == '.':
-        wsgi_root = ''
-    else:
+    wsgi_root = '.'.join([p for p in find_wsgi_file('.').split('/') if p != '.'])
+    if wsgi_root:
         wsgi_root += '.'
 
     template_vars = {
