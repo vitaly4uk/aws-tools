@@ -63,7 +63,7 @@ def main():
     if not os.path.exists('logs'):
         print('Creating logs directory...')
         os.mkdir('logs')
-        os.chown('./logs', os.getenv('SUDO_UID'), os.getenv('SUDO_GID'))
+        os.chown('./logs', int(os.getenv('SUDO_UID')), int(os.getenv('SUDO_GID')))
 
     if os.path.exists('/root/mysql_pass'):
         print('Creating MySQL database...')
@@ -105,7 +105,7 @@ def main():
 
             with io.open('local_settings.py', 'w') as tmpl:
                 tmpl.write(template.render(kwargs))
-            os.chown('./local_settings.py', os.getenv('SUDO_UID'), os.getenv('SUDO_GID'))
+            os.chown('./local_settings.py', int(os.getenv('SUDO_UID')), int(os.getenv('SUDO_GID')))
 
     # Find first available port
     if not args.debug:
@@ -132,7 +132,7 @@ def main():
     # store port number in file .port
     with io.open(os.path.join(root, '.port'), 'w') as port_file:
         port_file.write('PORT={port}'.format(port=start_port))
-    os.chown('./.port', os.getenv('SUDO_UID'), os.getenv('SUDO_GID'))
+    os.chown('./.port', int(os.getenv('SUDO_UID')), int(os.getenv('SUDO_GID')))
 
     if not args.debug:
         # Prepare nginx config
