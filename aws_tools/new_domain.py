@@ -13,6 +13,16 @@ import sys
 from aws_tools import VERSION
 
 
+def find_wsgi_file(path):
+    for root, dir_names, file_names in os.walk(path):
+        if 'wsgi.py' in file_names:
+            return root
+        for new_path in [dir_name for dir_name in dir_names if not dir_name[0] == '.']:
+            wsgi_path = find_wsgi_file(new_path)
+            if wsgi_path:
+                return wsgi_path
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='Create config files and start new project. Should be started in project directory.')
@@ -83,7 +93,8 @@ def main():
     if not os.path.exists('./venv'):
         print('Creating virtual environment...')
         subprocess.check_call('virtualenv venv --python={0}'.format(args.python), shell=True)
-    subprocess.check_call('./venv/bin/pip install -r requirements.txt', shell=True)
+    if os.path.exists('./requirements.txt'):
+        subprocess.check_call('./venv/bin/pip install -r requirements.txt', shell=True)
 
     if not os.path.exists('logs'):
         print('Creating logs directory...')
@@ -159,35 +170,48 @@ def main():
         port_file.write('PORT={port}'.format(port=start_port))
     os.chown('./.port', int(os.getenv('SUDO_UID')), int(os.getenv('SUDO_GID')))
 
+    # Prepare nginx config
+    print('Configure nginx...')
+    template_loader = jinja2.FileSystemLoader([data_files_path, root])
+    template_env = jinja2.Environment(loader=template_loader)
+    template = template_env.get_or_select_template(['template', 'template_nginx'])
+
+    wsgi_root = find_wsgi_file('.')
+    if wsgi_root == '.':
+        wsgi_root = ''
+    else:
+        wsgi_root += '.'
+
+    template_vars = {
+        'domain': args.domain,
+        'root': root,
+        'port': start_port,
+        'user': os.getenv('SUDO_USER'),
+        'wsgi_root': wsgi_root,
+    }
+    nging_config_output = template.render(template_vars)
+    print(nging_config_output)
+
+    # Prepare supervisor config
+    print('Configure supervisor...')
+    template_loader = jinja2.FileSystemLoader([data_files_path, root])
+    template_env = jinja2.Environment(loader=template_loader)
+    template = template_env.get_or_select_template(['template', 'template_supervisor'])
+    print(template.filename)
+    supervisor_config_output = template.render(template_vars)
+    print(supervisor_config_output)
+
     if not args.debug:
-        # Prepare nginx config
-        print('Configure nginx...')
-        template_loader = jinja2.FileSystemLoader([data_files_path, root])
-        template_env = jinja2.Environment(loader=template_loader)
-        template = template_env.get_or_select_template(['template', 'template_nginx'])
-
-        template_vars = {
-            'domain': args.domain,
-            'root': root,
-            'port': start_port,
-            'user': os.getenv('SUDO_USER'),
-        }
-
+        # write configs to files
         with io.open(os.path.join(output_file_path, args.domain), 'w') as tmpl:
-            tmpl.write(template.render(template_vars))
+            tmpl.write(nging_config_output)
 
         symlink_path = os.path.join(enabled_sites_path, args.domain)
         if not os.path.exists(symlink_path):
             os.symlink(os.path.join(output_file_path, args.domain), symlink_path)
 
-        # Prepare supervisor config
-        print('Configure supervisor...')
-        template_loader = jinja2.FileSystemLoader([data_files_path, root])
-        template_env = jinja2.Environment(loader=template_loader)
-        template = template_env.get_or_select_template(['template', 'template_supervisor'])
-
         with io.open(os.path.join(output_supervisor_path, args.domain + '.conf'), 'w') as tmpl:
-            tmpl.write(template.render(template_vars))
+            tmpl.write(supervisor_config_output)
 
         # Restart servers
         print('Restarting services...')

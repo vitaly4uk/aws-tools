@@ -1,5 +1,5 @@
 [program:{{ domain }}-web]
-command = {{ root }}/venv/bin/gunicorn wsgi:application -b 127.0.0.1:{{ port }} -w 1
+command = {{ root }}/venv/bin/gunicorn {{ wsgi_root}}wsgi:application -b 127.0.0.1:{{ port }} -w 1
 process_name = {{ domain }}-web
 user = {{ user }}
 directory = {{ root }}
