@@ -32,7 +32,7 @@ def main():
                         action='store_true')
     parser.add_argument('--drop-db', help='Drop database if exist.', action='store_true', dest='drop_db')
     parser.add_argument('-r', '--recreate-settings', help='Recreate local_settings file if exist', dest='recreate', action='store_true')
-    parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + '.'.join(VERSION))
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + '.'.join(map(str, VERSION)))
     args = parser.parse_args()
 
     if not prompt_sudo() == 0:

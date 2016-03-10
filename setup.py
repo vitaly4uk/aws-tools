@@ -3,8 +3,8 @@ from aws_tools import VERSION
 
 setup(
     name='aws-tools',
-    version='.'.join(VERSION),
-    packages=['aws-tools'],
+    version='.'.join(map(str, VERSION)),
+    packages=['aws_tools'],
     url='http://github.com/vitaly4uk/aws-tools',
     license='GPL v3',
     author='vitaly omelchuk',
@@ -12,10 +12,10 @@ setup(
     description='tools to create projects on vps',
     data_files=[
         ('/var/lib/aws-tools', [
-            'aws-tools/templates/template_nginx',
-            'aws-tools/templates/template_settings',
-            'aws-tools/templates/template_supervisor',
+            'aws_tools/templates/template_nginx',
+            'aws_tools/templates/template_settings',
+            'aws_tools/templates/template_supervisor',
             'README.md'])
     ],
-    scripts=['aws-tools/new_domain.py']
+    scripts=['aws_tools/new_domain.py']
 )
