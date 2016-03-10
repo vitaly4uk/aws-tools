@@ -17,8 +17,9 @@ def find_wsgi_file(path):
     for root, dir_names, file_names in os.walk(path):
         if 'wsgi.py' in file_names:
             return root
-        for new_path in [dir_name for dir_name in dir_names if not dir_name[0] == '.' or not dir_name == 'venv']:
-            wsgi_path = find_wsgi_file(new_path)
+        for new_path in [dir_name for dir_name in dir_names if dir_name[0] != '.' and dir_name != 'venv']:
+            print("'", new_path, "'")
+            wsgi_path = find_wsgi_file(os.path.join(root, new_path))
             if wsgi_path:
                 return wsgi_path
 
