@@ -16,6 +16,7 @@ from aws_tools import VERSION
 def main():
     parser = argparse.ArgumentParser(
         description='Create config files and start new project. Should be started in project directory.')
+    parser.add_argument('command', choices=['create', 'purge'], default='create')
     parser.add_argument('domain', help='Domain name. Example: example.com')
     parser.add_argument('--sql', help='SQL file name with DB. Example: example_com.sql')
     parser.add_argument('--python', help='python interpreter path', default='/usr/bin/python')
@@ -26,8 +27,14 @@ def main():
     parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + '.'.join(map(str, VERSION)))
     args = parser.parse_args()
 
+    # Check if script run with sudo
     if os.getenv('SUDO_USER') is None:
         print('Should be run with sudo.', file=sys.stderr)
+        exit(1)
+
+    # Check if it in some project root directory
+    if not os.path.exists('./manage.py'):
+        print('It is not a project directory', file=sys.stderr)
         exit(1)
 
     available_sites_path = '/etc/nginx/sites-available'
@@ -40,10 +47,37 @@ def main():
     check_port_path = enabled_sites_path if os.path.exists(enabled_sites_path) else root
     output_supervisor_path = supervisor_conf_path if os.path.exists(supervisor_conf_path) else root
 
-    # Check if we are in some project root directory
-    if not os.path.exists('./manage.py'):
-        print('It is not a project directory', file=sys.stderr)
-        exit(1)
+    # Remove all config files on purge
+    if args.command == 'purge':
+        print('Remove supervisor config file...')
+        os.remove(os.path.join(output_supervisor_path, args.domain + '.conf'))
+        print('Remove nginx config file...')
+        os.remove(os.path.join(enabled_sites_path, args.domain))
+        print('Remove local_settings.py file...')
+        os.remove('./local_settings.py')
+        if os.path.exists('/root/mysql_pass'):
+            print('Creating MySQL database...')
+            mysql_user, mysql_pass = open('/root/mysql_pass').read().strip().split(':')
+            sql_name = args.domain.encode('idna').replace('.', '_').replace('-', '_')
+            if len(sql_name) > 16:
+                sql_name = sql_name[:12] + ''.join(random.choice(string.ascii_uppercase + string.digits) for i in range(4))
+            kwargs = {
+                'domain': args.domain,
+                'sql_name': sql_name,
+                'mysql_user': mysql_user,
+                'mysql_pass': mysql_pass,
+                'create_db_sql': "CREATE DATABASE {0} CHARACTER SET utf8 COLLATE utf8_general_ci;".format(sql_name),
+                'create_user_sql': "GRANT ALL PRIVILEGES ON {0}.* To '{0}'@'localhost' IDENTIFIED BY '{0}';".format(sql_name),
+                'mysql_command': ''.join(['mysql -u{0}'.format(mysql_user), ' -p{0}'.format(mysql_pass) if mysql_pass else ''])
+            }
+
+            print('Drop database {sql_name}'.format(**kwargs))
+            subprocess.check_call('echo "DROP DATABASE {sql_name};" | {mysql_command}'.format(**kwargs), shell=True)
+        # Restart servers
+        print('Restarting services...')
+        subprocess.check_call('sudo supervisorctl reload', shell=True)
+        subprocess.check_call('sudo service nginx reload', shell=True)
+        exit()
 
     # Create virtual environment
     if not os.path.exists('./venv'):
@@ -128,7 +162,7 @@ def main():
     if not args.debug:
         # Prepare nginx config
         print('Configure nginx...')
-        template_loader = jinja2.FileSystemLoader([data_files_path, available_sites_path, root])
+        template_loader = jinja2.FileSystemLoader([data_files_path, root])
         template_env = jinja2.Environment(loader=template_loader)
         template = template_env.get_or_select_template(['template', 'template_nginx'])
 
@@ -148,7 +182,7 @@ def main():
 
         # Prepare supervisor config
         print('Configure supervisor...')
-        template_loader = jinja2.FileSystemLoader([data_files_path, supervisor_conf_path, root])
+        template_loader = jinja2.FileSystemLoader([data_files_path, root])
         template_env = jinja2.Environment(loader=template_loader)
         template = template_env.get_or_select_template(['template', 'template_supervisor'])
 
