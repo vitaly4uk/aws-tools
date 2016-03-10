@@ -112,7 +112,7 @@ def main():
             'sql_name': sql_name,
             'mysql_user': mysql_user,
             'mysql_pass': mysql_pass,
-            'create_db_sql': "CREATE DATABASE {0} CHARACTER SET utf8 COLLATE utf8_general_ci;".format(sql_name),
+            'create_db_sql': "CREATE DATABASE IF NOT EXISTS {0} CHARACTER SET utf8 COLLATE utf8_general_ci;".format(sql_name),
             'create_user_sql': "GRANT ALL PRIVILEGES ON {0}.* To '{0}'@'localhost' IDENTIFIED BY '{0}';".format(sql_name),
             'mysql_command': ''.join(['mysql -u{0}'.format(mysql_user), ' -p{0}'.format(mysql_pass) if mysql_pass else ''])
         }
