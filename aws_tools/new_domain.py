@@ -13,15 +13,6 @@ import sys
 from aws_tools import VERSION
 
 
-def prompt_sudo():
-    ret = 0
-    if os.geteuid() != 0:
-        os.environ['SUDO_USER'] = os.getenv('USER')
-        msg = "[sudo] password for %u:"
-        ret = subprocess.check_call("sudo -v -p '%s'" % msg, shell=True)
-    return ret
-
-
 def main():
     parser = argparse.ArgumentParser(
         description='Create config files and start new project. Should be started in project directory.')
@@ -35,8 +26,8 @@ def main():
     parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + '.'.join(map(str, VERSION)))
     args = parser.parse_args()
 
-    if not prompt_sudo() == 0:
-        print('Wrong username or password', file=sys.stderr)
+    if os.getenv('SUDO_USER') is None:
+        print('Should be run with sudo.', file=sys.stderr)
         exit(1)
 
     available_sites_path = '/etc/nginx/sites-available'
