@@ -23,11 +23,19 @@ def find_wsgi_file(path):
                 return wsgi_path
 
 
+def valid_domain(domain):
+    print(domain)
+    domain_pattern = re.compile(r'[a-zA-Z\d-]{,63}(\.[a-zA-Z\d-]{,63})*')
+    if not any(domain_pattern.match(domain).groups()):
+        raise argparse.ArgumentTypeError('Domain name. Example: example.com')
+    return domain
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='Create config files and start new project. Should be started in project directory.')
     parser.add_argument('command', choices=['create', 'purge'], default='create')
-    parser.add_argument('domain', help='Domain name. Example: example.com')
+    parser.add_argument('domain', help='Domain name. Example: example.com', type=valid_domain)
     parser.add_argument('--sql', help='SQL file name with DB. Example: example_com.sql')
     parser.add_argument('--python', help='python interpreter path', default='/usr/bin/python')
     parser.add_argument('-d', '--debug', help='Debug mode. Only for local development. No nginx and no supervisor.',
@@ -53,6 +61,7 @@ def main():
     data_files_path = '/var/lib/aws-tools'
     start_port = 8000
     root = os.getcwd()
+    print(root)
     output_file_path = available_sites_path if os.path.exists(available_sites_path) else root
     check_port_path = enabled_sites_path if os.path.exists(enabled_sites_path) else root
     output_supervisor_path = supervisor_conf_path if os.path.exists(supervisor_conf_path) else root
@@ -146,7 +155,7 @@ def main():
     # Find first available port
     if not args.debug:
         ports = []
-        print('Finding port number in {0}...'.format(check_port_path))
+        print('Searching port number in {0}...'.format(check_port_path))
         for file_name in os.listdir(check_port_path):
             print('in {0}'.format(file_name))
             full_file_name = os.path.realpath(os.path.join(check_port_path, file_name))
@@ -201,6 +210,7 @@ def main():
 
     if not args.debug:
         # write configs to files
+        print(output_file_path, args.domain)
         with io.open(os.path.join(output_file_path, args.domain), 'w') as tmpl:
             tmpl.write(nging_config_output)
 
