@@ -91,7 +91,10 @@ def main():
             }
 
             print('Drop database {sql_name}'.format(**kwargs))
-            subprocess.check_call('echo "DROP DATABASE {sql_name};" | {mysql_command}'.format(**kwargs), shell=True)
+            try:
+                subprocess.check_call('echo "DROP DATABASE {sql_name};" | {mysql_command}'.format(**kwargs), shell=True)
+            except subprocess.CalledProcessError:
+                print('Database {sql_name} doesn\'t exist'.format(**kwargs), file=sys.stderr)
         # Restart servers
         print('Restarting services...')
         subprocess.check_call('sudo supervisorctl reload', shell=True)
@@ -128,7 +131,10 @@ def main():
 
         if args.drop_db:
             print('Drop database {sql_name}'.format(**kwargs))
-            subprocess.check_call('echo "DROP DATABASE {sql_name};" | {mysql_command}'.format(**kwargs), shell=True)
+            try:
+                subprocess.check_call('echo "DROP DATABASE {sql_name};" | {mysql_command}'.format(**kwargs), shell=True)
+            except subprocess.CalledProcessError:
+                print('Database {sql_name} doesn\'t exist'.format(**kwargs), file=sys.stderr)
         subprocess.check_call('echo "{create_db_sql}" | {mysql_command}'.format(**kwargs), shell=True)
         subprocess.check_call('echo "{create_user_sql}" | {mysql_command}'.format(**kwargs), shell=True)
         if args.sql:
