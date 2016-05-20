@@ -101,9 +101,9 @@ def main():
     # Create virtual environment
     if not os.path.exists('./venv'):
         print('Creating virtual environment...')
-        subprocess.check_call('virtualenv venv --python={0}'.format(args.python), shell=True)
+        subprocess.check_call('sudo -u {0} virtualenv venv --python={1}'.format(os.getenv('SUDO_USER'), args.python), shell=True)
     if os.path.exists('./requirements.txt'):
-        subprocess.check_call('./venv/bin/pip install -r requirements.txt', shell=True)
+        subprocess.check_call('sudo -u {0} ./venv/bin/pip install -r requirements.txt'.format(os.getenv('SUDO_USER')), shell=True)
 
     if not os.path.exists('logs'):
         print('Creating logs directory...')
